@@ -35,4 +35,28 @@ contract CreditOracle is ICreditOracle {
         enity.rate = interest;
     }
 
+    function queryTimeWeighted(
+        address asset, 
+        Term duration, 
+        uint256 timestamp,
+        uint256 entries
+    ) {
+        uint256 queryNum;
+        uint256 queryDenom;
+        uint256 subsequent = timestamp;
+
+        for (uint256 x = 0; x < entries; x++) {
+            Entry storage entry = _entries[duration][subsequent];
+
+            uint256 deltaTime = subsequent - entry.predecessor;
+
+            queryNum += deltaTime * entry.rate;
+            queryDenom += deltaTime;
+
+            subsequent = entry.predecessor;
+        }
+
+        return queryNum / queryDenom;
+    }
+
 }
