@@ -23,4 +23,16 @@ contract CreditOracle is ICreditOracle {
         return _registry;
     }
 
+    function log(address asset, Term duration, uint256 interest) public onlyRegistry {
+        uint256 subsequentTimestamp = block.timestamp;
+        uint256 previousTimestamp = _timestamps[asset][duration];
+
+        Entry storage entry = _entries[duration][subsequentTimestamp];
+
+        _timestamps[asset][duration] = subsequentTimestamp;
+
+        entry.predecessor = previousTimestamp;
+        enity.rate = interest;
+    }
+
 }
