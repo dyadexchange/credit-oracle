@@ -1,11 +1,11 @@
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.13;
 
 import { ICreditOracle } from '@interfaces/ICreditOracle.sol';
+import { ICreditRegistry } from '@interfaces/ICreditRegistry.sol';
 
 contract CreditOracle is ICreditOracle {
 
-    mapping (address => mapping(Term => Entry)) _entries;
-    mapping (address => mapping(Term => uint256)) _timestamps;
+    mapping (address => mapping(Term => Market)) _markets;
 
     address _registry;
 
@@ -17,22 +17,11 @@ contract CreditOracle is ICreditOracle {
         if (msg.sender != registry()) {
             revert InvalidRegistry();
         }
+        _;
     }
 
     function registry() public view returns (address) {
         return _registry;
-    }
-
-    function log(address asset, Term duration, uint256 interest) public onlyRegistry {
-        uint256 subsequentTimestamp = block.timestamp;
-        uint256 previousTimestamp = _timestamps[asset][duration];
-
-        Entry storage entry = _entries[duration][subsequentTimestamp];
-
-        _timestamps[asset][duration] = subsequentTimestamp;
-
-        entry.predecessor = previousTimestamp;
-        enity.rate = interest;
     }
 
     function queryTimeWeighted(
@@ -40,13 +29,18 @@ contract CreditOracle is ICreditOracle {
         Term duration, 
         uint256 timestamp,
         uint256 entries
-    ) {
+    ) 
+        public view 
+        returns (uint256)
+    {
         uint256 queryNum;
         uint256 queryDenom;
         uint256 subsequent = timestamp;
 
+        Market storage market = _markets[asset][duration];
+
         for (uint256 x = 0; x < entries; x++) {
-            Entry storage entry = _entries[duration][subsequent];
+            Entry storage entry = market.entries[subsequent];
 
             uint256 deltaTime = subsequent - entry.predecessor;
 
@@ -57,6 +51,26 @@ contract CreditOracle is ICreditOracle {
         }
 
         return queryNum / queryDenom;
+    }
+
+    function log(
+        address asset, 
+        Term duration, 
+        uint256 interest
+    )  
+        public
+        onlyRegistry
+    {
+        Market storage market = _markets[asset][duration];
+
+        uint256 subsequentTimestamp = block.timestamp;
+        uint256 previousTimestamp = market.lastTimestamp;
+
+        Entry storage entry = market.entries[subsequentTimestamp];
+
+        market.lastTimestamp = subsequentTimestamp;
+        entry.predecessor = previousTimestamp;
+        entry.rate = interest;
     }
 
 }

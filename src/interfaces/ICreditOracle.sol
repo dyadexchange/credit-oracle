@@ -1,12 +1,18 @@
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.13;
 
-interface ICreditOracle {
+import { ICreditRegistry } from '@interfaces/ICreditRegistry.sol';
 
-    enum Term { 1_MONTHS, 3_MONTHS, 6_MONTHS, 12_MONTHS }
+interface ICreditOracle is ICreditRegistry {
+
+    struct Market {
+        uint256 lastTimestamp;
+        mapping(uint256 => Entry) entries; 
+    }
   
     struct Entry {
         uint256 rate;
         uint256 predecessor;
     }
 
+    error InvalidRegistry();
 }
