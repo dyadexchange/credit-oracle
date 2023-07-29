@@ -31,7 +31,7 @@ contract CreditOracle is ICreditOracle {
         uint256 entries
     ) 
         public view 
-        returns (uint256)
+        returns (uint256, uint256)
     {
         uint256 queryNum;
         uint256 queryDenom;
@@ -50,7 +50,7 @@ contract CreditOracle is ICreditOracle {
             subsequent = entry.predecessor;
         }
 
-        return queryNum / queryDenom;
+        return (queryNum / queryDenom, queryDenom)
     }
 
     function log(
