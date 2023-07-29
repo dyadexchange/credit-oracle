@@ -24,6 +24,13 @@ contract CreditOracle is ICreditOracle {
         return _registry;
     }
 
+    function entry(address asset, Term duration, uint256 timestamp)
+        public view
+        returns (Entry memory)
+    {
+        return _markets[asset][duration].entries[timestamp];
+    }
+
     function queryTimeWeighted(
         address asset, 
         Term duration, 
@@ -50,14 +57,10 @@ contract CreditOracle is ICreditOracle {
             subsequent = entry.predecessor;
         }
 
-        return (queryNum / queryDenom, queryDenom)
+        return (queryNum / queryDenom, queryDenom);
     }
 
-    function log(
-        address asset, 
-        Term duration, 
-        uint256 interest
-    )  
+    function log(address asset, Term duration, uint256 rate)  
         public
         onlyRegistry
     {
@@ -68,9 +71,9 @@ contract CreditOracle is ICreditOracle {
 
         Entry storage entry = market.entries[subsequentTimestamp];
 
-        market.lastTimestamp = subsequentTimestamp;
+        entry.rate = rate;
         entry.predecessor = previousTimestamp;
-        entry.rate = interest;
+        market.lastTimestamp = subsequentTimestamp;
     }
 
 }
