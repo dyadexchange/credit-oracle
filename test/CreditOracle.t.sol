@@ -16,13 +16,40 @@ contract CreditOracleTest is Test {
 	}
 
 	function testOwnership() public {
+		_log_entry(0);
+	}
+
+	function testQueryTimeWeighted() public {
+		uint256 startTimestamp = block.timestamp;
+		uint256[7] memory interest_rates = [
+			uint256(100 gwei),
+			uint256(101 gwei),
+			uint256(105 gwei),
+			uint256(101 gwei),
+			uint256(100 gwei),
+			uint256(99 gwei),
+			uint256(105 gwei)
+		];
+
+		for (uint256 x = 0; x < interest_rates.length; x++) {
+			_log_entry(interest_rates[x]);
+
+			vm.warp(block.timestamp + 1 weeks);
+		}
+
+		(uint256 value, uint256 delta, uint256 ts) = oracle.queryTimeWeighted(
+			MARKET_ADDRESS,
+			ICreditRegistry.Term.ONE_MONTHS,
+			startTimestamp,
+			7
+		);
+	}
+
+	function _log_entry(uint256 rate) public {
 		/*  ------ REGISTRY ------ */
 		vm.startPrank(REGISTRY_ADDRESS);
-			oracle.log(MARKET_ADDRESS, ICreditRegistry.Term.ONE_MONTHS, 0);
+			oracle.log(MARKET_ADDRESS, ICreditRegistry.Term.ONE_MONTHS, rate);
 		vm.stopPrank();
 		/*  --------------------- */
 	}
-
-	function testQueryTimeWeighted() public {}
-
 }
