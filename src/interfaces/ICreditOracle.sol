@@ -15,4 +15,6 @@ interface ICreditOracle is ICreditRegistry {
     }
 
     error InvalidRegistry();
+
+    event Log(address asset, Term duration, uint256 rate);
 }

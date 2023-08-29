@@ -76,6 +76,8 @@ contract CreditOracle is ICreditOracle {
         entry.rate = rate;
         entry.predecessor = previousTimestamp;
         market.lastTimestamp = subsequentTimestamp;
+
+        emit Log(asset, duration, rate);
     }
 
 }
