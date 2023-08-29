@@ -38,7 +38,7 @@ contract CreditOracle is ICreditOracle {
         uint256 entries
     ) 
         public view 
-        returns (uint256, uint256)
+        returns (uint256, uint256, uint256)
     {
         uint256 queryNum;
         uint256 queryDenom;
@@ -57,7 +57,9 @@ contract CreditOracle is ICreditOracle {
             subsequent = entry.predecessor;
         }
 
-        return (queryNum / queryDenom, queryDenom);
+        uint256 rateWeighted = queryNum / queryDenom;
+
+        return (rateWeighted, queryDenom, subsequent);
     }
 
     function log(address asset, Term duration, uint256 rate)  
