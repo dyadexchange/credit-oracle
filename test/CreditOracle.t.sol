@@ -2,16 +2,18 @@ pragma solidity 0.8.15;
 
 import { Test } from '@forge-std/Test.sol';
 import { CreditOracle } from '@core/CreditOracle.sol';
-import { ICreditRegistry } from '@interfaces/ICreditRegistry.sol';
+import { IDomainObjects } from '@interfaces/IDomainObjects.sol';
 
 contract CreditOracleTest is Test {
 
     CreditOracle oracle;
+    IDomainObjects.Term term;
 
     address MARKET_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address REGISTRY_ADDRESS = 0x95A2b07eB236110719975625CeE026ffe2b02799;
     
     function setUp() public {
+        term = IDomainObjects.Term.ONE_MONTHS;
         oracle = new CreditOracle(REGISTRY_ADDRESS);
     }
 
@@ -38,7 +40,7 @@ contract CreditOracleTest is Test {
 
         (uint256 value, uint256 delta, uint256 ts) = oracle.queryTimeWeighted(
             MARKET_ADDRESS,
-            ICreditRegistry.Term.ONE_MONTHS,
+            term,
             block.timestamp - 1 weeks,
             7
         );
@@ -47,7 +49,7 @@ contract CreditOracleTest is Test {
     function _log_entry(uint256 rate) public {
         /*  ------ REGISTRY ------ */
         vm.startPrank(REGISTRY_ADDRESS);
-            oracle.log(MARKET_ADDRESS, ICreditRegistry.Term.ONE_MONTHS, rate);
+            oracle.log(MARKET_ADDRESS, term, rate);
         vm.stopPrank();
         /*  --------------------- */
     }
