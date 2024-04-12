@@ -1,6 +1,7 @@
 pragma solidity ^0.8.13;
 
 import { ICreditOracle } from '@interfaces/ICreditOracle.sol';
+import { ICreditStrategy } from '@interfaces/ICreditStrategy.sol';
 
 contract CreditOracle is ICreditOracle {
 
@@ -30,35 +31,27 @@ contract CreditOracle is ICreditOracle {
         return _markets[asset][duration].entries[timestamp];
     }
 
-    function queryTimeWeighted(
-        address asset, 
+    function queryRate(
         Term duration, 
+        address asset, 
+        address strategy,
         uint256 timestamp,
         uint256 entries
     ) 
         public view 
         returns (uint256, uint256, uint256)
     {
-        uint256 queryNum;
-        uint256 queryDenom;
-        uint256 subsequent = timestamp;
+        uint256 strategyRate;
+        uint256 lastEntryIndex;
+        uint256 strategySeriesTime;
 
-        Market storage market = _markets[asset][duration];
+        (strategyRate, strategySeriesTime, lastEntryIndex) = ICreditStrategy(strategy).query(
+            _markets[asset][duration],
+            timestamp,
+            entries
+        );
 
-        for (uint256 x = 0; x < entries; x++) {
-            Entry storage entry = market.entries[subsequent];
-
-            uint256 deltaTime = subsequent - entry.predecessor;
-
-            queryNum += deltaTime * entry.rate;
-            queryDenom += deltaTime;
-
-            subsequent = entry.predecessor;
-        }
-
-        uint256 rateWeighted = queryNum / queryDenom;
-
-        return (rateWeighted, queryDenom, subsequent);
+        return (strategyRate, strategySeriesTime, lastEntryIndex);
     }
 
     function log(address asset, Term duration, uint256 rate)  
