@@ -5,36 +5,49 @@ import { ICreditStrategy } from '@interfaces/ICreditStrategy.sol';
 
 contract CreditOracle is ICreditOracle {
 
-    mapping (address => mapping(Term => Market)) _markets;
+    mapping (address => Provider) _providers;
 
-    address _registry;
+    address _controller;
 
-    constructor(address registry) {
-        _registry = registry;
+    constructor(address controller) {
+        _controller = controller;
     }
 
-    modifier onlyRegistry() {
-        if (msg.sender != registry()) {
+    modifier onlyController() {
+        if (msg.sender != controller()) {
             revert InvalidRegistry();
         }
         _;
     }
 
-    function registry() public view returns (address) {
-        return _registry;
+    modifier onlyProvider() {
+        if (!_providers[msg.sender].authenicated) {
+            revert InvalidRegistry();
+        }
+        _;
     }
 
-    function entry(address asset, Term duration, uint256 timestamp)
+    function controller() public view returns (address) {
+        return _controller;
+    }
+
+    function entry(
+        address provider,
+        address asset, 
+        Term duration, 
+        uint256 timestamp
+    )
         public view
         returns (Entry memory)
     {
-        return _markets[asset][duration].entries[timestamp];
+        return _providers[provider].market[asset][duration].entries[timestamp];
     }
 
     function queryRate(
-        Term duration, 
         address asset, 
         address strategy,
+        address provider,
+        Term duration, 
         uint256 timestamp,
         uint256 entries
     ) 
@@ -46,7 +59,7 @@ contract CreditOracle is ICreditOracle {
         uint256 strategySeriesTime;
 
         (strategyRate, strategySeriesTime, lastEntryIndex) = ICreditStrategy(strategy).query(
-            _markets[asset][duration],
+            _providers[provider].market[asset][duration],
             timestamp,
             entries
         );
@@ -56,9 +69,9 @@ contract CreditOracle is ICreditOracle {
 
     function log(address asset, Term duration, uint256 rate)  
         public
-        onlyRegistry
+        onlyProvider(msg.sender)
     {
-        Market storage market = _markets[asset][duration];
+        Market storage market = _providers[msg.sender].market[asset][duration];
 
         uint256 subsequentTimestamp = block.timestamp;
         uint256 previousTimestamp = market.lastTimestamp;
@@ -69,7 +82,15 @@ contract CreditOracle is ICreditOracle {
         entry.predecessor = previousTimestamp;
         market.lastTimestamp = subsequentTimestamp;
 
-        emit Log(asset, duration, rate);
+        emit Log(msg.sender, asset, duration, rate);
+    }
+
+    function registerProvider(address provider) onlyController public {
+        _providers[provider].authenicated = true;
+    }
+
+    function unregisterProvider(address provider) onlyController public {
+        _providers[provider].authenicated = false;
     }
 
 }
