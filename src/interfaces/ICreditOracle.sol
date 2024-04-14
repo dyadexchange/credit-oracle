@@ -24,4 +24,8 @@ interface ICreditOracle is IDomainObjects {
     error InvalidProvider();
 
     event Log(address provider, address asset, Term duration, uint256 rate);
+
+    event Register(address provider);
+
+    event Unregister(address provider);
 }

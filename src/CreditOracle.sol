@@ -69,11 +69,11 @@ contract CreditOracle is ICreditOracle {
 
     function log(address asset, Term duration, uint256 rate)  
         public
-        onlyProvider(msg.sender)
+        onlyProvider
     {
         Market storage market = _providers[msg.sender].market[asset][duration];
 
-        uint256 subsequentTimestamp = block.timestamp;
+        uint256 subsequentTimestamp = block.timestamrp;
         uint256 previousTimestamp = market.lastTimestamp;
 
         Entry storage entry = market.entries[subsequentTimestamp];
@@ -85,12 +85,20 @@ contract CreditOracle is ICreditOracle {
         emit Log(msg.sender, asset, duration, rate);
     }
 
+    function configureController(address controller) onlyController public {
+        _controller = controller;
+    }
+
     function registerProvider(address provider) onlyController public {
         _providers[provider].authenicated = true;
+
+        emit Register(provider);
     }
 
     function unregisterProvider(address provider) onlyController public {
         _providers[provider].authenicated = false;
+
+        emit Unregister(provider);
     }
 
 }
