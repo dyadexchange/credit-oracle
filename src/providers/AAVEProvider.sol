@@ -1,5 +1,6 @@
 pragma solidity ^0.8.13;
 
+import "@intefaces/ICreditOracle.sol";
 import "@interfaces/ICreditProvider.sol";
 
 contract AaveProvider is ICreditProvider {
